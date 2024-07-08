@@ -2,9 +2,10 @@
   "name": "3-project",
   "version": "1.0.0",
   "description": "backend for the project",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev" : "nodemon src/index.js"
   },
   "author": "Anshuman Patidar",
   "license": "ISC"
