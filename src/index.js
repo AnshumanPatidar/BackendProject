@@ -1,13 +1,7 @@
-import mongoose from "mongoose"
-import { DB_NAME } from "./constants"
+// require("dotenv").config({path: './env'})
 
-
-
-
-
-
-
-
+// import mongoose from "mongoose"
+// import { DB_NAME } from "./constants"
 // // this approach is good but even better approach is to write your code in db folder 
 // // the reason we make db folder is to have database related code in one place 
 
@@ -38,3 +32,11 @@ import { DB_NAME } from "./constants"
 //    }
 
 //   })()
+
+import dotenv from 'dotenv'
+import connectDB from './db/index.js'
+
+connectDB();
+dotenv.config({
+  path: './env'
+})
