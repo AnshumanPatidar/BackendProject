@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import { log } from "console";
+
 import fs from "fs";
 
 // Configuration
@@ -9,27 +9,45 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-
 const uploadOnCloudinary = async (localFilePath) => {
-    try {
-        if(!localFilePath){
-          return null
-        }
-        // upload the file on the cloudinary
-      const response = await cloudinary.uploader.upload(localFilePath, {
-           resource_type : "auto"
-        })
-        // file has been uploaded successfully
-        console.log("file is uploaded on cloudinary" , response.url);
-        return response;
-    } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the locally saved temporary file as the upload operation got failed
-        return null;
-    }
-}
+  if (!localFilePath) {
+    return null;
+  }
 
+  try {
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "auto",
+    });
 
-export {uploadOnCloudinary}
+    fs.unlinkSync(localFilePath);
+    return response;
+  } catch (error) {
+    // Upload an image
 
+    fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the upload operation got failed
+    console.log(error);
+    return null;
+  }
+};
 
+// this code was not working i don't know why
 
+// const uploadOnCloudinary = async (localFilePath) => {
+//   try {
+//     if (!localFilePath) {
+//       return null;
+//     }
+//
+//     const response = await cloudinary.uploader.upload(localFilePath, {
+//       resource_type: "auto",
+//     });
+
+//    return response;
+//   } catch (error) {
+//     fs.unlinkSync(localFilePath);
+
+//     return null;
+//   }
+// };
+
+export { uploadOnCloudinary };

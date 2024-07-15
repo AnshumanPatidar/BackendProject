@@ -30,11 +30,11 @@ const userSchema = new Schema(
       index: true,
     },
     avatar: {
-      type: String, // cloudnary url use krenge
+      type: String, // cloudinary url use krenge
       required: true,
     },
     coverImage: {
-      type: String, // cloudnary url use krenge
+      type: String, // cloudinary url use krenge
     },
     watchHistory: [
       {
@@ -82,14 +82,14 @@ userSchema.methods.generateAccessToken = function () {
 };
 
 // jwt token
-userSchema.methods.generateAccessToken = function () {
+userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
       _id: this._id,
     },
-    process.env.REFRESS_TOKEN_SECRET,
+    process.env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn: process.env.REFRESS_TOKEN_EXPIRY,
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
     }
   );
 };
