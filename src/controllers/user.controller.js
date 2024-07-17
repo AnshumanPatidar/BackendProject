@@ -176,6 +176,29 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
-const logoutUser = asyncHandler(async (req, res) => {});
+const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: { refreshToken: undefined },
+    },
+    {
+      new: true,
+    }
+  );
 
-export { registerUser, loginUser };
+  const option = {
+    // by defautl cookie can be modified at the frontend
+    // but after add httpOnly and secure true , they are only modified at server
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .statur(200)
+    .clearCookies("accessToken", option)
+    .clearCookies("refreshToken", option)
+    .json(new ApiResponse(200, {}, "User logged Out"));
+});
+
+export { registerUser, loginUser, logoutUser };
