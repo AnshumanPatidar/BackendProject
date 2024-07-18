@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
 
 // remember "User" is in the database (mongo db)
 //  this "user" is the instance of that user that we asked for , from database
@@ -113,7 +114,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const { email, username, password } = req.body;
 
-  if (!(username || email)) {
+  if (!username && !email) {
     throw new ApiError(400, "username or email is required ");
   }
 
@@ -125,7 +126,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({
     // array ke ander  object leta h  $or operator
     // mongo db provide krta hai
-    $or: [{ password }, { email }],
+    $or: [{ username }, { email }],
   });
 
   if (!user) {
@@ -150,9 +151,11 @@ const loginUser = asyncHandler(async (req, res) => {
   // // Save the user instance
   // await user.save({ validateBeforeSave: false });
 
-  const loggedInUser = User.findOne(user._id).select("-password -refreshToken");
+  const loggedInUser = await User.findOne(user._id).select(
+    "-password -refreshToken"
+  );
 
-  const option = {
+  const options = {
     // by defautl cookie can be modified at the frontend
     // but after add httpOnly and secure true , they are only modified at server
     httpOnly: true,
@@ -160,9 +163,9 @@ const loginUser = asyncHandler(async (req, res) => {
   };
 
   return res
-    .statur(200)
-    .cookie("accessToken", accessToken, option)
-    .cookie("refreshToken", refreshToken, option)
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
         200,
@@ -187,7 +190,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     }
   );
 
-  const option = {
+  const options = {
     // by defautl cookie can be modified at the frontend
     // but after add httpOnly and secure true , they are only modified at server
     httpOnly: true,
@@ -195,10 +198,58 @@ const logoutUser = asyncHandler(async (req, res) => {
   };
 
   return res
-    .statur(200)
-    .clearCookies("accessToken", option)
-    .clearCookies("refreshToken", option)
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User logged Out"));
 });
 
-export { registerUser, loginUser, logoutUser };
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
+
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    const user = await User.findById(decodedToken?._id);
+
+    if (!user) {
+      throw new ApiError(401, "Invalid refresh Token");
+    }
+
+    if (incomingRefreshToken !== user?.refreshToken) {
+      throw new ApiError(401, "Refresh token is expired or used");
+    }
+
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+
+    const { accessToken, newRefreshToken } =
+      await generateAccessAndRefereshTokens(user._id);
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", newRefreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken: newRefreshToken },
+          "Access token refreshed"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid refresh Token");
+  }
+});
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken };
