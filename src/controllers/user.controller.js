@@ -366,13 +366,16 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     throw new ApiError(400, "username is missing");
   }
 
+  // channel will have an array of object
   const channel = await User.aggregate([
     {
+      // $match will filter the document which has same username as username came from req.params
       $match: {
         username: username?.toLowerCase(),
       },
     },
     {
+      // $lookup perform left join operation and adds as an array field to the original documents.
       $lookup: {
         from: "subscriptions",
         localField: "_id",
@@ -389,6 +392,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       },
     },
     {
+      // The $addFields stage is used to add new fields or modify existing fields in the documents. This stage can also be used to create computed fields based on existing data in the document.
       $addFields: {
         subscribersCount: {
           $size: "$subscribers",
