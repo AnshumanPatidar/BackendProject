@@ -184,7 +184,8 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: { refreshToken: undefined },
+      // $set: { refreshToken: undefined }, ye kaam nhi kr rha tha logo ke
+      $unset: { refreshToken: 1 }, // this removes the field from document
     },
     {
       new: true,
@@ -281,8 +282,8 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullname, email } = req.body;
 
-  if (!fullname || !email) {
-    throw new ApiError(400, "All fields are required ");
+  if (!fullname && !email) {
+    throw new ApiError(400, "Atleast one fields are required to update ");
   }
   // {new : true} esko likh diya toh matlab ki update hone ke baad info return hogi
   // mtlb nayi info return hogi
@@ -314,7 +315,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     new ApiError(400, "error while uploading on cloudinary");
   }
 
-  const user = await Uses.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user._id,
     {
       $set: {
@@ -343,7 +344,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     new ApiError(400, "error while uploading on cloudinary");
   }
 
-  const user = await Uses.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user._id,
     {
       $set: {
@@ -444,7 +445,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         // ONE MORE NOTE : aggregation pipeline ka code directly hi jaata h bich me mongoose nhi aata
         // esliye apn direct req.user._id nhi likh sakte apn ko niche wala syntex use krna padega
         // yaha pr apn mongoose ki object id bana rhe hai
-        _id: mongoose.Types.ObjectId(req.user._id),
+        _id: new mongoose.Types.ObjectId(req.user._id),
       },
     },
     {
