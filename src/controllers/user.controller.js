@@ -495,6 +495,16 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     );
 });
 
+const enterComment = asyncHandler(async (req, res) => {
+  const { content } = req.body;
+
+  if (!content) {
+    throw new ApiError(400, "please enter the comment");
+  }
+
+  const comment = Comment.findById();
+});
+
 export {
   registerUser,
   loginUser,
